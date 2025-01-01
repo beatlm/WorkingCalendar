@@ -2,7 +2,7 @@ import React from 'react';
 import { format } from 'date-fns';
 import { useCalendarStore } from '../store/calendarStore';
 import { WorkStatus } from '../types/calendar';
-import { Home, Sun, CarIcon } from 'lucide-react';
+import { Home, Sun, CarIcon, Triangle, Gavel } from 'lucide-react';
 
 interface CalendarDayProps {
   date: Date;
@@ -10,6 +10,7 @@ interface CalendarDayProps {
 }
 
 const getBackgroundColor = (status: WorkStatus): string => {
+
   switch (status) {
     case 'work':
       return 'bg-red-200 hover:bg-red-300';
@@ -17,8 +18,10 @@ const getBackgroundColor = (status: WorkStatus): string => {
       return 'bg-blue-200 hover:bg-blue-300';
     case 'vacation':
       return 'bg-yellow-200 hover:bg-yellow-300';
+    case 'juicio':
+      return 'bg-gray-200 hover:bg-gray-300';
     default:
-      return 'bg-white hover:bg-gray-100';
+      return 'bg-white hover:bg-white-100';
   }
 };
 
@@ -29,7 +32,9 @@ const StatusIcon: React.FC<{ status: WorkStatus }> = ({ status }) => {
     case 'work':
       return <CarIcon className="w-5 h-5 text-red-600" />;
     case 'vacation':
-      return <Sun className="w-5 h-5 text-yellow-600" />;
+      return <Sun className="w-5 h-5 text-yellow-600" size={50} />;
+    case 'juicio':
+      return <Gavel className="w-5 h-5 text-black-600"/>;
     default:
       return null;
   }
@@ -42,7 +47,7 @@ export const CalendarDay: React.FC<CalendarDayProps> = ({ date, isOutsideMonth }
   const dayNumber = format(date, 'd');
 
   const handleStatusChange = async () => {
-    const statusOrder: WorkStatus[] = ['work', 'free', 'vacation'];
+    const statusOrder: WorkStatus[] = ['work', 'free', 'vacation', 'juicio'];
     const currentIndex = statusOrder.indexOf(status as WorkStatus);
     const nextStatus = statusOrder[(currentIndex + 1) % statusOrder.length];
     await setDayStatus(date, nextStatus);
