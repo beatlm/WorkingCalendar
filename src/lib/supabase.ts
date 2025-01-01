@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { format, parseISO } from 'date-fns';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseUrl =  import.meta.env.VITE_SUPABASE_URL;
 const supabaseKey = import.meta.env.VITE_SUPABASE_API_KEY;
 
 if (!supabaseUrl || !supabaseKey) {

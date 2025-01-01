@@ -2,19 +2,18 @@ import React from 'react';
 import { format } from 'date-fns';
 import { useCalendarStore } from '../store/calendarStore';
 import { WorkStatus } from '../types/calendar';
-import { Home, Computer, Sun } from 'lucide-react';
+import { Home, Sun, CarIcon } from 'lucide-react';
 
 interface CalendarDayProps {
   date: Date;
   isOutsideMonth: boolean;
 }
 
-const getBackgroundColor = (status: WorkStatus, isWeekend: boolean, isHoliday: boolean): string => {
-  if (isWeekend || isHoliday) return 'bg-green-200 hover:bg-green-300';
+const getBackgroundColor = (status: WorkStatus): string => {
   switch (status) {
-    case 'office':
+    case 'work':
       return 'bg-red-200 hover:bg-red-300';
-    case 'remote':
+    case 'free':
       return 'bg-blue-200 hover:bg-blue-300';
     case 'vacation':
       return 'bg-yellow-200 hover:bg-yellow-300';
@@ -25,10 +24,10 @@ const getBackgroundColor = (status: WorkStatus, isWeekend: boolean, isHoliday: b
 
 const StatusIcon: React.FC<{ status: WorkStatus }> = ({ status }) => {
   switch (status) {
-    case 'remote':
+    case 'free':
       return <Home className="w-5 h-5 text-blue-600" />;
-    case 'office':
-      return <Computer className="w-5 h-5 text-red-600" />;
+    case 'work':
+      return <CarIcon className="w-5 h-5 text-red-600" />;
     case 'vacation':
       return <Sun className="w-5 h-5 text-yellow-600" />;
     default:
@@ -38,13 +37,12 @@ const StatusIcon: React.FC<{ status: WorkStatus }> = ({ status }) => {
 
 export const CalendarDay: React.FC<CalendarDayProps> = ({ date, isOutsideMonth }) => {
   const { getDayStatus, setDayStatus, isLoading } = useCalendarStore();
-  const { status, isWeekend, isHoliday } = getDayStatus(date);
+  const { status } = getDayStatus(date);
   
   const dayNumber = format(date, 'd');
 
   const handleStatusChange = async () => {
-    if (isWeekend || isHoliday || isLoading) return;
-    const statusOrder: WorkStatus[] = ['office', 'remote', 'vacation'];
+    const statusOrder: WorkStatus[] = ['work', 'free', 'vacation'];
     const currentIndex = statusOrder.indexOf(status as WorkStatus);
     const nextStatus = statusOrder[(currentIndex + 1) % statusOrder.length];
     await setDayStatus(date, nextStatus);
@@ -54,12 +52,12 @@ export const CalendarDay: React.FC<CalendarDayProps> = ({ date, isOutsideMonth }
     return <div className="h-24 bg-gray-50 rounded-lg opacity-50"></div>;
   }
 
-  const backgroundColor = getBackgroundColor(status, isWeekend, isHoliday);
+  const backgroundColor = getBackgroundColor(status);
 
   return (
     <button
       onClick={handleStatusChange}
-      disabled={isWeekend || isHoliday || isLoading}
+      disabled={isLoading}
       className={`
         h-24 p-2 rounded-lg flex flex-col items-center justify-start gap-2
         ${backgroundColor}
@@ -70,7 +68,7 @@ export const CalendarDay: React.FC<CalendarDayProps> = ({ date, isOutsideMonth }
       <span className="text-sm font-semibold text-gray-800">
         {dayNumber}
       </span>
-      {!isWeekend && !isHoliday && <StatusIcon status={status} />}
+      {<StatusIcon status={status} />}
     </button>
   );
 };

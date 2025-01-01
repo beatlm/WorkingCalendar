@@ -48,7 +48,7 @@ export const useCalendarStore = create<CalendarState>((set, get) => ({
   getDayStatus: (date: Date) => {
     const { dayStatuses } = get();
     const dateKey = getDateKey(date);
-    const status = dayStatuses.get(dateKey) || 'office';
+    const status = dayStatuses.get(dateKey) || 'work';
     return getDayStatusInfo(date, status);
   },
 

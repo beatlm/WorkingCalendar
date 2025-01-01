@@ -5,10 +5,9 @@ import { ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 import { useCalendarStore } from '../store/calendarStore';
 import { useMonthNavigation } from '../hooks/useMonthNavigation';
 import { CalendarDay } from './CalendarDay';
-import { getDetailedQuarterStats } from '../utils/statistics';
 
 export const Calendar: React.FC = () => {
-  const { currentDate, setCurrentDate, isLoading, error, fetchCurrentYearStatuses, dayStatuses } = useCalendarStore();
+  const { currentDate, setCurrentDate, isLoading, error, fetchCurrentYearStatuses } = useCalendarStore();
   const { nextMonth, previousMonth } = useMonthNavigation(currentDate, setCurrentDate);
 
   useEffect(() => {
@@ -26,9 +25,7 @@ export const Calendar: React.FC = () => {
     end: endOfWeek(calendarStart, { weekStartsOn: 1 })
   });
 
-  const stats = getDetailedQuarterStats(currentDate, dayStatuses);
 
-  const currentQuarter = getQuarter(currentDate);
 
   if (error) {
     return (
@@ -68,16 +65,8 @@ export const Calendar: React.FC = () => {
           <h2 className="text-2xl font-semibold capitalize">
             {format(currentDate, 'MMMM yyyy', { locale: es })}
           </h2>
-          <p className="text-sm text-gray-600 mt-1">
-            {currentQuarter}º Trimestre
-          </p>
-          <div
-              className="bg-blue-500 h-2.5 rounded-full transition-all duration-300"
-              style={{ width: `${Math.max(0, Math.min(100, stats.percentage))}%` }}
-            />
-          <span className="text-sm font-medium text-gray-600 min-w-[3.5rem]">
-            {stats.percentage.toFixed(1)}%
-          </span>
+         
+        
           
         </div>
        
