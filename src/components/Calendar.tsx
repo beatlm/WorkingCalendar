@@ -28,12 +28,15 @@ export interface DayStatusRecord {
 }
 
 export const Calendar: React.FC = () => {
-  const { currentDate, setCurrentDate, isLoading, error, fetchCurrentYearStatuses } = useCalendarStore();
-  const { nextMonth, previousMonth } = useMonthNavigation(currentDate, setCurrentDate);
+  const { currentDate, fetchDayStatuses, isLoading } = useCalendarStore();
+  const { nextMonth, previousMonth } = useMonthNavigation(currentDate, async (newDate: Date) => {
+    useCalendarStore.getState().setCurrentDate(newDate);
+  });
 
-  useEffect(() => {
-    fetchCurrentYearStatuses();
-  }, []);
+ // Cargar datos iniciales
+ useEffect(() => {
+  fetchDayStatuses(currentDate.getFullYear());
+}, []);
 
   const monthStart = startOfMonth(currentDate);
   const monthEnd = endOfMonth(monthStart);
@@ -48,20 +51,7 @@ export const Calendar: React.FC = () => {
 
 
 
-  if (error) {
-    return (
-      <div className="text-red-600 text-center p-4 bg-red-50 rounded-lg">
-        <p className="font-semibold">Error al cargar los datos</p>
-        <p className="text-sm mt-2">{error}</p>
-        <button 
-          onClick={() => fetchCurrentYearStatuses()}
-          className="mt-4 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
-        >
-          Reintentar
-        </button>
-      </div>
-    );
-  }
+
 
   return (
     <div className="max-w-4xl mx-auto p-4">

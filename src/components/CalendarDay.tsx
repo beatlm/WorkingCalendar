@@ -31,15 +31,15 @@ const getBackgroundColor = (status: WorkStatus): string => {
 const StatusIcon: React.FC<{ status: WorkStatus }> = ({ status }) => {
   switch (status) {
     case 'free':
-      return <Home className="w-10 h-10 text-blue-600" />;
+      return <Home className="w-8 h-8 text-green-600" />;
     case 'work':
-      return <CarIcon className="w-10 h-10 text-red-600" />;
+      return <CarIcon className="w-8 h-8 text-red-600" />;
     case 'vacation':
-      return <Sun className="w-10 h-10 text-yellow-600" size={50} />;
+      return <Sun className="w-8 h-8 text-yellow-600" />;
     case 'juicio':
-      return <Gavel className="w-10 h-10 text-black-600"/>;
+      return <Gavel className="w-8 h-8 text-black-600"/>;
     case 'asuntos':
-        return <Briefcase className="w-10 h-10 text-black-600"/>;
+        return <Briefcase className="w-8 h-8 text-black-600"/>;
     default:
       return null;
   }

@@ -16,4 +16,7 @@ export interface YearlyCounters {
   vacationDays: number;
   personalDays: number;
   remainingHours: number;
+  totalVacationDays: number;
+  totalPersonalDays: number;
+  totalRemainingHours: number;
 }

@@ -1,65 +1,30 @@
 import { create } from 'zustand';
-import { startOfMonth } from 'date-fns';
-import { WorkStatus, DayStatus,DayStatusRecord ,YearlyCounters} from '../types/calendar';
+import { startOfToday } from 'date-fns';
+import { CalendarState } from '../types/store';
+import { fetchDayStatuses, updateDayStatus } from '../services/dayStatusService';
+import { fetchSettings, updateSettings as updateSettingsService } from '../services/settingsService';
+import { calculateYearlyCounters } from '../utils/yearlyCounters';
 import { getDayStatusInfo } from '../utils/dayStatus';
 import { getDateKey } from '../utils/dateFormatters';
-import { fetchDayStatuses, updateDayStatus } from '../services/dayStatusService';
-import { calculateYearlyCounters } from '../utils/yearlyCounters';
-
-interface CalendarState {
-  currentDate: Date;
-  dayStatuses: Map<string, DayStatusRecord>;
-  yearlyCounters: YearlyCounters;
-
-  isLoading: boolean;
-  error: string | null;
-  setCurrentDate: (date: Date) => Promise<void>;
-  setDayStatus: (date: Date, status: WorkStatus, hours:number) => Promise<void>;
-  getDayStatus: (date: Date) => DayStatus;
-  fetchCurrentYearStatuses: () => Promise<void>;
-}
+import { WorkStatus } from '../types/calendar';
 
 export const useCalendarStore = create<CalendarState>((set, get) => ({
-  currentDate: startOfMonth(new Date()),
+  // Estado inicial
+  currentDate: startOfToday(),
   dayStatuses: new Map(),
-  isLoading: false,
-  error: null,
   yearlyCounters: {
-    vacationDays: 23,
-    personalDays: 8,
-    remainingHours: 4
+    vacationDays: 0,
+    personalDays: 0,
+    remainingHours: 0,
+    totalVacationDays: 0,
+    totalPersonalDays: 0,
+    totalRemainingHours: 0
   },
-  setCurrentDate: async (date: Date) => {
-    set({ currentDate: date });
-    await get().fetchCurrentYearStatuses();
-  },
+  settings: null,
+  isLoading: false,
 
-  setDayStatus: async (date: Date, status: WorkStatus, hours?: number) => {
-    try {
-      set({ isLoading: true, error: null });
-      await updateDayStatus(date, status, hours);
-      
-      const dateKey = getDateKey(date);
-      const newDayStatuses = new Map(get().dayStatuses);
-      newDayStatuses.set(dateKey, { date: dateKey, status, hours });
-      
-      const yearlyCounters = calculateYearlyCounters(newDayStatuses);
-      
-      set({
-        dayStatuses: newDayStatuses,
-        yearlyCounters,
-        isLoading: false
-      });
-    } catch (error) {
-      set({ 
-        error: error instanceof Error ? error.message : 'Error al actualizar el estado del día',
-        isLoading: false 
-      });
-    }
-  },
-
-
-  
+  // Acciones
+  setCurrentDate: (date: Date) => set({ currentDate: date }),
 
   getDayStatus: (date: Date) => {
     const { dayStatuses } = get();
@@ -73,24 +38,69 @@ export const useCalendarStore = create<CalendarState>((set, get) => ({
     };
   },
 
-  fetchCurrentYearStatuses: async () => {
+  setDayStatus: async (date: Date, status: WorkStatus, hours?: number) => {
+    set({ isLoading: true });
     try {
-      set({ isLoading: true, error: null });
-      const { currentDate } = get();
-      const statusMap = await fetchDayStatuses(currentDate.getFullYear(),currentDate.getMonth());
-      const yearlyCounters = calculateYearlyCounters(statusMap);
+      const dateKey = getDateKey(date);
+      await updateDayStatus(date, status, hours);
       
-      set({ 
-        dayStatuses: statusMap,
-        yearlyCounters,
-        isLoading: false 
+      const { dayStatuses, settings } = get();
+      const newDayStatuses = new Map(dayStatuses);
+      newDayStatuses.set(dateKey, { date: dateKey, status, hours });
+      
+      const yearlyCounters = calculateYearlyCounters(newDayStatuses, settings!);
+      
+      set({
+        dayStatuses: newDayStatuses,
+        yearlyCounters
       });
     } catch (error) {
-      console.error('Error fetching day statuses:', error);
-      set({ 
-        error: error instanceof Error ? error.message : 'Error al cargar los datos',
-        isLoading: false 
+      console.error('Error updating day status:', error);
+      throw error;
+    } finally {
+      set({ isLoading: false });
+    }
+  },
+
+  fetchDayStatuses: async (year: number) => {
+    set({ isLoading: true });
+    try {
+      const [dayStatuses, settings] = await Promise.all([
+        fetchDayStatuses(year),
+        fetchSettings()
+      ]);
+      
+      const yearlyCounters = calculateYearlyCounters(dayStatuses, settings);
+      
+      set({
+        dayStatuses,
+        settings,
+        yearlyCounters
       });
+    } catch (error) {
+      console.error('Error fetching data:', error);
+      throw error;
+    } finally {
+      set({ isLoading: false });
+    }
+  },
+
+  updateSettings: async (settings) => {
+    set({ isLoading: true });
+    try {
+      await updateSettingsService(settings);
+      const { dayStatuses } = get();
+      const yearlyCounters = calculateYearlyCounters(dayStatuses, settings);
+      
+      set({
+        settings,
+        yearlyCounters
+      });
+    } catch (error) {
+      console.error('Error updating settings:', error);
+      throw error;
+    } finally {
+      set({ isLoading: false });
     }
   }
 }));

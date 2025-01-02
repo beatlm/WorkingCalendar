@@ -1,19 +1,19 @@
-import { DayStatusRecord } from '../types/calendar';
+import {  DayStatusRecord, YearlyCounters } from '../types/calendar';
+import { SettingsFormData } from '../types/settings';
 
-const INITIAL_VACATION_DAYS = 22;
-const INITIAL_PERSONAL_DAYS = 6;
-const INITIAL_HOURS = 40;
-
-export const calculateYearlyCounters = (dayStatuses: Map<string, DayStatusRecord>) => {
-  let vacationDays = 0;
-  let personalDays = 0;
+export const calculateYearlyCounters = (
+  dayStatuses: Map<string, DayStatusRecord>,
+  settings: SettingsFormData
+): YearlyCounters => {
+  let usedVacationDays = 0;
+  let usedPersonalDays = 0;
   let usedHours = 0;
 
   dayStatuses.forEach((record) => {
     if (record.status === 'vacation') {
-      vacationDays++;
-    } else if (record.status === 'personal') {
-      personalDays++;
+      usedVacationDays++;
+    } else if (record.status === 'asuntos') {
+      usedPersonalDays++;
     }
     if (record.hours) {
       usedHours += record.hours;
@@ -21,8 +21,11 @@ export const calculateYearlyCounters = (dayStatuses: Map<string, DayStatusRecord
   });
 
   return {
-    vacationDays: INITIAL_VACATION_DAYS - vacationDays,
-    personalDays: INITIAL_PERSONAL_DAYS - personalDays,
-    remainingHours: INITIAL_HOURS - usedHours
+    vacationDays: settings.vacationDays - usedVacationDays,
+    personalDays: settings.personalDays - usedPersonalDays,
+    remainingHours: settings.availableHours - usedHours,
+    totalVacationDays: settings.vacationDays,
+    totalPersonalDays: settings.personalDays,
+    totalRemainingHours: settings.availableHours
   };
 };
