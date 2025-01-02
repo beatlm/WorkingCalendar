@@ -1,10 +1,31 @@
 import React, { useEffect } from 'react';
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, startOfWeek, endOfWeek, isSameMonth, getQuarter } from 'date-fns';
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, startOfWeek, endOfWeek, isSameMonth } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 import { useCalendarStore } from '../store/calendarStore';
 import { useMonthNavigation } from '../hooks/useMonthNavigation';
 import { CalendarDay } from './CalendarDay';
+import { WorkStatus } from '../types/calendar';
+
+
+export interface DayStatus {
+  date: Date;
+  status: WorkStatus;
+  hours?: number;
+}
+
+
+export interface YearlyCounters {
+  vacationDays: number;
+  personalDays: number;
+  remainingHours: number;
+}
+
+export interface DayStatusRecord {
+  date: string;
+  status: WorkStatus;
+  hours?: number;
+}
 
 export const Calendar: React.FC = () => {
   const { currentDate, setCurrentDate, isLoading, error, fetchCurrentYearStatuses } = useCalendarStore();
@@ -87,7 +108,7 @@ export const Calendar: React.FC = () => {
             key={day.toString()}
             className="text-center font-semibold text-gray-600"
           >
-            {format(day, 'EEEEEE', { locale: es }).toUpperCase()}
+            {format(day, 'EEEEE', { locale: es }).toUpperCase()}
           </div>
         ))}
       </div>

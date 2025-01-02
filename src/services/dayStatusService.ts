@@ -1,12 +1,14 @@
-import { startOfYear, endOfYear } from 'date-fns';
-import { supabase, DayStatusRecord } from '../lib/supabase';
-import { WorkStatus } from '../types/calendar';
+import { startOfMonth, endOfMonth } from 'date-fns';
+import { supabase } from '../lib/supabase';
+import { WorkStatus, DayStatusRecord } from '../types/calendar';
 import { formatDateForDB, getDateKey } from '../utils/dateFormatters';
 
-export const fetchDayStatuses = async (year: number): Promise<Map<string, WorkStatus>> => {
-  const startDate = formatDateForDB(startOfYear(new Date(year, 0)));
-  const endDate = formatDateForDB(endOfYear(new Date(year, 0)));
-
+export const fetchDayStatuses = async (year: number, month:number): Promise<Map<string, DayStatusRecord>> => {
+  const startDate = formatDateForDB(startOfMonth(new Date(year,month, 1)));
+  const endDate = formatDateForDB(endOfMonth(new Date(year,month, 31)));
+  console.log('month '+month);
+console.log('startDate: '+startDate);
+console.log('endDate: '+endDate);
   try {
     const { data, error } = await supabase
       .from('day_statuses')
@@ -16,10 +18,14 @@ export const fetchDayStatuses = async (year: number): Promise<Map<string, WorkSt
 
     if (error) throw error;
 
-    const statusMap = new Map<string, WorkStatus>();
+    const statusMap = new Map<string, DayStatusRecord>();
     (data as DayStatusRecord[]).forEach(record => {
       const dateKey = getDateKey(new Date(record.date));
-      statusMap.set(dateKey, record.status as WorkStatus);
+      statusMap.set(dateKey, {
+        date: record.date,
+        status: record.status,
+        hours: record.hours
+      });
     });
 
     return statusMap;
@@ -31,7 +37,8 @@ export const fetchDayStatuses = async (year: number): Promise<Map<string, WorkSt
 
 export const updateDayStatus = async (
   date: Date,
-  status: WorkStatus
+  status: WorkStatus,
+  hours?: number
 ): Promise<void> => {
   const dateStr = formatDateForDB(date);
 
@@ -40,7 +47,8 @@ export const updateDayStatus = async (
       .from('day_statuses')
       .upsert({
         date: dateStr,
-        status: status
+        status: status,
+        hours: hours
       }, {
         onConflict: 'date'
       });
